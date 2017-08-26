@@ -5,21 +5,41 @@ class StarShapeImageComponent extends Component {
     }
     render() {
         return (<div>
-                    <img src={this.props.image}/>
+                    <img src={this.props.image} onclick={this.props.onclick}/>
                 </div>)
     }
 }
 export default class StarShapeImageSourceComponent extends Component {
     constructor(props) {
         super(props)
-        this.state = {image:this.props.image,origImage:this.props.image,scale:0}
+        this.state = {image:this.props.image,origImage:this.props.image,animated:false}
     }
     componentDidMount() {
         var imgObj= new Image()
         imgObj.src = this.state.origImage
-        this.drawOverStar(imgObj,this.props.color||'orange')
+        imgObj.onload = ()=>{
+            this.drawOverStar(imgObj,this.props.color||'orange')
+            this.setState({origImage:imgObj})
+        }
     }
-    drawOverStar(image,color) {
+    handleClick() {
+        if(!this.state.animated) {
+            this.setState({animated:true})
+            var scale = 0
+            var deg = 0
+            const interval = setInterval(()=>{
+                deg+=4.5
+                scale = Math.abs(Math.sin(deg*Math.PI/180))
+                this.drawOverStar(this.state.origImage,this.props.color||'orange',scale)
+                if(deg>180) {
+                    deg = 0
+                    clearInterval(interval)
+                    this.setState({animated:false})
+                }
+            })
+        }
+    }
+    drawOverStar(image,color,scale=0) {
         const defineShape = (context)=>{
             context.beginPath()
             for(var i=0;i<6;i++) {
@@ -62,6 +82,6 @@ export default class StarShapeImageSourceComponent extends Component {
         this.setState({image:canvas.toDataURL()})
     }
     render() {
-        return (<StarShapeImageComponent image={this.state.image}></StarShapeImageComponent>)
+        return (<StarShapeImageComponent image={this.state.image} onclick={this.handleClick.bind(this)}></StarShapeImageComponent>)
     }
 }
